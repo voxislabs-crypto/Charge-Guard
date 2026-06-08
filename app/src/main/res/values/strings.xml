@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Charge Guard</string>
+    <string name="status_armed">Status: Armed</string>
+    <string name="status_disarmed">Status: Disarmed</string>
+    <string name="calibration_started">Calibration started. Keep phone still.</string>
+    <string name="countdown_value">Countdown: %1$d s</string>
+    <string name="sensitivity_value">Threshold: %.2f</string>
+    <string name="pin_invalid">PIN must be at least 4 digits.</string>
+    <string name="pin_saved">PIN saved.</string>
+    <string name="pin_prompt_hint">Enter your PIN</string>
+    <string name="enter_pin_title">Enter PIN to Disarm</string>
+    <string name="pin_incorrect">Incorrect PIN.</string>
+    <string name="disarm_label">Disarm</string>
+    <string name="desc_auto">While charging, the guard auto-arms whenever phone locks, 3s after movement stops.</string>
+    <string name="desc_manual">Manual mode: tap Arm Guard to arm while charging.</string>
+    <string name="disclaimer_charging_only">Disclaimer: Protection only works while the phone is plugged in and charging.</string>
+    <string name="settle_hint_auto">Set-down behavior: after lock, it waits for movement to stop, then waits 3 seconds before arming.</string>
+    <string name="settle_hint_manual">Set-down delay applies to auto-arm mode. In manual mode, you control when arming starts.</string>
+    <string name="mode_monitoring">Mode: Monitoring</string>
+    <string name="mode_pending_auto_arm">Mode: Pending Auto-Arm (set-down delay)</string>
+    <string name="mode_armed">Mode: Armed</string>
+    <string name="mode_alarm">Mode: Alarm Active</string>
+</resources>
