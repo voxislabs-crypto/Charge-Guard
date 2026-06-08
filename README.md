@@ -99,6 +99,29 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 - Protection only works while the phone is plugged in and charging.
 - Set-down behavior: after lock, motion must settle, then a 3-second delay runs before arming.
 
+## Monetization Skeleton (Implemented)
+
+The app now includes:
+
+- Google Play Billing one-time unlock (`premium_unlock`)
+- AdMob banner integration
+- UMP consent flow
+- Premium state that hides ads when unlocked
+
+Before production release, update these values:
+
+1. Create an in-app product in Play Console with product id `premium_unlock`, or change `PREMIUM_PRODUCT_ID` in `app/build.gradle.kts`.
+2. Replace test AdMob IDs in `app/src/main/res/values/strings.xml`:
+	- `admob_app_id`
+	- `admob_banner_unit_id`
+3. Test purchases with Play internal testing track and test accounts.
+4. Keep Play Billing for digital unlocks to stay policy-compliant.
+
+### Current APK Locations
+
+- Debug APK: `app/build/outputs/apk/debug/app-debug.apk`
+- Release APK: `app/build/outputs/apk/release/app-release.apk`
+
 ## Persistence
 
 - Monitoring service auto-restarts on boot.

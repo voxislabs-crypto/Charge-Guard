@@ -15,6 +15,7 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
+import com.google.android.gms.ads.AdView
 
 class MainActivity : AppCompatActivity() {
     private lateinit var descriptionText: TextView
@@ -33,6 +34,12 @@ class MainActivity : AppCompatActivity() {
     private lateinit var pinSwitch: Switch
     private lateinit var pinInput: EditText
     private lateinit var savePinButton: Button
+    private lateinit var premiumStatusText: TextView
+    private lateinit var buyPremiumButton: Button
+    private lateinit var restorePurchaseButton: Button
+    private lateinit var adView: AdView
+
+    private lateinit var monetizationManager: MonetizationManager
 
     private val prefs by lazy { getSharedPreferences(GuardService.PREFS, MODE_PRIVATE) }
 
@@ -69,6 +76,20 @@ class MainActivity : AppCompatActivity() {
         pinSwitch = findViewById(R.id.pinSwitch)
         pinInput = findViewById(R.id.pinInput)
         savePinButton = findViewById(R.id.savePinButton)
+        premiumStatusText = findViewById(R.id.premiumStatusText)
+        buyPremiumButton = findViewById(R.id.buyPremiumButton)
+        restorePurchaseButton = findViewById(R.id.restorePurchaseButton)
+        adView = findViewById(R.id.adView)
+
+        monetizationManager = MonetizationManager(
+            activity = this,
+            prefs = prefs,
+            premiumStatusText = premiumStatusText,
+            buyPremiumButton = buyPremiumButton,
+            restorePurchaseButton = restorePurchaseButton,
+            adView = adView
+        )
+        monetizationManager.initialize()
 
         setupSensitivityUi()
         setupCountdownUi()
@@ -120,6 +141,11 @@ class MainActivity : AppCompatActivity() {
     override fun onStop() {
         super.onStop()
         unregisterReceiver(uiStateReceiver)
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        monetizationManager.onDestroy()
     }
 
     private fun updateStateText(armed: Boolean) {

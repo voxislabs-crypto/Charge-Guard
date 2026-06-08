@@ -21,4 +21,11 @@
     <string name="mode_pending_auto_arm">Mode: Pending Auto-Arm (set-down delay)</string>
     <string name="mode_armed">Mode: Armed</string>
     <string name="mode_alarm">Mode: Alarm Active</string>
+    <string name="premium_status_locked">Premium: Locked (ads enabled)</string>
+    <string name="premium_status_unlocked">Premium: Unlocked (ads removed)</string>
+    <string name="premium_not_ready">Premium product not ready yet. Try again shortly.</string>
+
+    <!-- Test IDs; replace with your own in production. -->
+    <string name="admob_app_id">ca-app-pub-3940256099942544~3347511713</string>
+    <string name="admob_banner_unit_id">ca-app-pub-3940256099942544/6300978111</string>
 </resources>
