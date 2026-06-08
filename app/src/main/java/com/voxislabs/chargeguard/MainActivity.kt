@@ -135,7 +135,12 @@ class MainActivity : AppCompatActivity() {
 
     override fun onStart() {
         super.onStart()
-        registerReceiver(uiStateReceiver, IntentFilter(GuardService.ACTION_UI_STATE_CHANGED))
+        ContextCompat.registerReceiver(
+            this,
+            uiStateReceiver,
+            IntentFilter(GuardService.ACTION_UI_STATE_CHANGED),
+            ContextCompat.RECEIVER_NOT_EXPORTED
+        )
     }
 
     override fun onStop() {
