@@ -13,8 +13,11 @@ import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
+import android.media.AudioAttributes
+import android.media.AudioDeviceInfo
 import android.media.AudioManager
 import android.media.ToneGenerator
+import android.os.Build
 import android.os.BatteryManager
 import android.os.CountDownTimer
 import android.os.IBinder
@@ -48,11 +51,13 @@ class GuardService : Service(), SensorEventListener {
     private var toneGenerator: ToneGenerator? = null
     private var textToSpeech: TextToSpeech? = null
     private var alarmActive = false
+    private var speakerRouteForced = false
 
     private var wakeLock: PowerManager.WakeLock? = null
     private var sensitivityThreshold = DEFAULT_DISTURBANCE_THRESHOLD
     private var gracePeriodSeconds = DEFAULT_GRACE_PERIOD_SECONDS
     private var armMode = ARM_MODE_AUTO_LOCK
+    private var triggerMode = TRIGGER_MODE_CHARGING
     private var pendingAutoArm = false
     private var lastMovementAt = 0L
     private var calibrating = false
@@ -74,7 +79,9 @@ class GuardService : Service(), SensorEventListener {
                 Intent.ACTION_POWER_DISCONNECTED -> {
                     isCharging = false
                     cancelPendingAutoArm()
-                    onDisturbance("Power disconnected")
+                    if (triggerMode == TRIGGER_MODE_UNPLUG) {
+                        onDisturbance("Power disconnected")
+                    }
                     refreshNotification()
                 }
                 Intent.ACTION_SCREEN_OFF -> {
@@ -155,7 +162,12 @@ class GuardService : Service(), SensorEventListener {
     override fun onBind(intent: Intent?): IBinder? = null
 
     override fun onSensorChanged(event: SensorEvent) {
-        if (!calibrating && !pendingAutoArm && (!isArmed || !isCharging || alarmActive)) return
+        val monitorMotionForAlarm =
+            isArmed &&
+                !alarmActive &&
+                triggerMode == TRIGGER_MODE_CHARGING &&
+                isCharging
+        if (!calibrating && !pendingAutoArm && !monitorMotionForAlarm) return
 
         val x = event.values[0]
         val y = event.values[1]
@@ -259,8 +271,8 @@ class GuardService : Service(), SensorEventListener {
         acquireWakeLock()
 
         val audioManager = getSystemService(AUDIO_SERVICE) as AudioManager
-        val maxAlarmVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_ALARM)
-        audioManager.setStreamVolume(AudioManager.STREAM_ALARM, maxAlarmVolume, 0)
+        maximizeAlarmRelatedStreams(audioManager)
+        forceBuiltInSpeaker(audioManager)
 
         toneGenerator?.release()
         toneGenerator = ToneGenerator(AudioManager.STREAM_ALARM, 100)
@@ -281,6 +293,10 @@ class GuardService : Service(), SensorEventListener {
         toneGenerator?.stopTone()
         toneGenerator?.release()
         toneGenerator = null
+
+        val audioManager = getSystemService(AUDIO_SERVICE) as AudioManager
+        clearForcedSpeaker(audioManager)
+
         releaseWakeLock()
     }
 
@@ -342,6 +358,12 @@ class GuardService : Service(), SensorEventListener {
         textToSpeech = TextToSpeech(this) { status ->
             if (status == TextToSpeech.SUCCESS) {
                 textToSpeech?.language = Locale.US
+                textToSpeech?.setAudioAttributes(
+                    AudioAttributes.Builder()
+                        .setUsage(AudioAttributes.USAGE_ALARM)
+                        .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
+                        .build()
+                )
                 textToSpeech?.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
                     override fun onStart(utteranceId: String?) = Unit
 
@@ -384,6 +406,7 @@ class GuardService : Service(), SensorEventListener {
             .getInt(KEY_GRACE_SECONDS, DEFAULT_GRACE_PERIOD_SECONDS)
             .coerceIn(5, 12)
         armMode = prefs.getString(KEY_ARM_MODE, ARM_MODE_AUTO_LOCK) ?: ARM_MODE_AUTO_LOCK
+        triggerMode = prefs.getString(KEY_TRIGGER_MODE, TRIGGER_MODE_CHARGING) ?: TRIGGER_MODE_CHARGING
     }
 
     private fun startCalibration() {
@@ -473,6 +496,48 @@ class GuardService : Service(), SensorEventListener {
         })
     }
 
+    private fun maximizeAlarmRelatedStreams(audioManager: AudioManager) {
+        val streams = listOf(
+            AudioManager.STREAM_ALARM,
+            AudioManager.STREAM_MUSIC,
+            AudioManager.STREAM_RING
+        )
+        streams.forEach { stream ->
+            val max = audioManager.getStreamMaxVolume(stream)
+            audioManager.setStreamVolume(stream, max, 0)
+        }
+    }
+
+    private fun forceBuiltInSpeaker(audioManager: AudioManager) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            val builtinSpeaker = audioManager.availableCommunicationDevices
+                .firstOrNull { it.type == AudioDeviceInfo.TYPE_BUILTIN_SPEAKER }
+            if (builtinSpeaker != null) {
+                speakerRouteForced = audioManager.setCommunicationDevice(builtinSpeaker)
+            }
+            return
+        }
+
+        @Suppress("DEPRECATION")
+        run {
+            audioManager.isSpeakerphoneOn = true
+            speakerRouteForced = true
+        }
+    }
+
+    private fun clearForcedSpeaker(audioManager: AudioManager) {
+        if (!speakerRouteForced) return
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            audioManager.clearCommunicationDevice()
+        } else {
+            @Suppress("DEPRECATION")
+            run {
+                audioManager.isSpeakerphoneOn = false
+            }
+        }
+        speakerRouteForced = false
+    }
+
     private fun acquireWakeLock() {
         if (wakeLock?.isHeld == true) return
         wakeLock = powerManager.newWakeLock(
@@ -508,6 +573,7 @@ class GuardService : Service(), SensorEventListener {
         const val KEY_SENSITIVITY_THRESHOLD = "sensitivity_threshold"
         const val KEY_GRACE_SECONDS = "grace_seconds"
         const val KEY_ARM_MODE = "arm_mode"
+        const val KEY_TRIGGER_MODE = "trigger_mode"
         const val KEY_PIN_ENABLED = "pin_enabled"
         const val KEY_PIN_CODE = "pin_code"
         const val KEY_UI_STATE = "ui_state"
@@ -516,6 +582,9 @@ class GuardService : Service(), SensorEventListener {
 
         const val ARM_MODE_AUTO_LOCK = "auto_lock"
         const val ARM_MODE_MANUAL = "manual"
+
+        const val TRIGGER_MODE_CHARGING = "charging"
+        const val TRIGGER_MODE_UNPLUG = "unplug"
 
         const val UI_STATE_MONITORING = "monitoring"
         const val UI_STATE_PENDING = "pending_auto_arm"

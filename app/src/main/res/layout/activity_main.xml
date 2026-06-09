@@ -50,6 +50,21 @@
             android:layout_marginTop="18dp"
             android:text="Auto-arm on lock while charging" />
 
+        <Switch
+            android:id="@+id/triggerModeSwitch"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:text="Trigger alarm when unplugged" />
+
+        <TextView
+            android:id="@+id/triggerModeHintText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="Current trigger: movement while charging."
+            android:textAppearance="@style/TextAppearance.Material3.BodySmall" />
+
         <TextView
             android:id="@+id/stateText"
             android:layout_width="match_parent"

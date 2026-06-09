@@ -26,6 +26,8 @@ class MainActivity : AppCompatActivity() {
     private lateinit var armButton: Button
     private lateinit var disarmButton: Button
     private lateinit var armModeSwitch: Switch
+    private lateinit var triggerModeSwitch: Switch
+    private lateinit var triggerModeHintText: TextView
     private lateinit var sensitivityLabel: TextView
     private lateinit var sensitivitySeekBar: SeekBar
     private lateinit var countdownLabel: TextView
@@ -68,6 +70,8 @@ class MainActivity : AppCompatActivity() {
         armButton = findViewById(R.id.armButton)
         disarmButton = findViewById(R.id.disarmButton)
         armModeSwitch = findViewById(R.id.armModeSwitch)
+        triggerModeSwitch = findViewById(R.id.triggerModeSwitch)
+        triggerModeHintText = findViewById(R.id.triggerModeHintText)
         sensitivityLabel = findViewById(R.id.sensitivityLabel)
         sensitivitySeekBar = findViewById(R.id.sensitivitySeekBar)
         countdownLabel = findViewById(R.id.countdownLabel)
@@ -95,6 +99,7 @@ class MainActivity : AppCompatActivity() {
         setupCountdownUi()
         setupPinUi()
         setupArmModeUi()
+        setupTriggerModeUi()
 
         armButton.setOnClickListener {
             val armIntent = Intent(this, GuardService::class.java).apply {
@@ -234,6 +239,22 @@ class MainActivity : AppCompatActivity() {
         })
     }
 
+    private fun setupTriggerModeUi() {
+        triggerModeSwitch.setOnCheckedChangeListener { _, checked ->
+            val mode = if (checked) {
+                GuardService.TRIGGER_MODE_UNPLUG
+            } else {
+                GuardService.TRIGGER_MODE_CHARGING
+            }
+            prefs.edit().putString(GuardService.KEY_TRIGGER_MODE, mode).apply()
+            updateTriggerModeHint(mode)
+
+            startService(Intent(this@MainActivity, GuardService::class.java).apply {
+                action = GuardService.ACTION_UPDATE_SETTINGS
+            })
+        }
+    }
+
     private fun refreshSettingsUiFromPrefs() {
         val threshold = prefs.getFloat(GuardService.KEY_SENSITIVITY_THRESHOLD, 3.2f)
         sensitivitySeekBar.progress = thresholdToProgress(threshold)
@@ -253,6 +274,13 @@ class MainActivity : AppCompatActivity() {
         armButton.isEnabled = mode == GuardService.ARM_MODE_MANUAL
         armButton.alpha = if (armButton.isEnabled) 1f else 0.5f
         updateArmModeCopy(mode)
+
+        val triggerMode = prefs.getString(
+            GuardService.KEY_TRIGGER_MODE,
+            GuardService.TRIGGER_MODE_CHARGING
+        ) ?: GuardService.TRIGGER_MODE_CHARGING
+        triggerModeSwitch.isChecked = triggerMode == GuardService.TRIGGER_MODE_UNPLUG
+        updateTriggerModeHint(triggerMode)
     }
 
     private fun updatePinInputEnabled(enabled: Boolean) {
@@ -343,6 +371,14 @@ class MainActivity : AppCompatActivity() {
             getString(R.string.settle_hint_auto)
         } else {
             getString(R.string.settle_hint_manual)
+        }
+    }
+
+    private fun updateTriggerModeHint(mode: String) {
+        triggerModeHintText.text = if (mode == GuardService.TRIGGER_MODE_UNPLUG) {
+            getString(R.string.trigger_mode_unplug_hint)
+        } else {
+            getString(R.string.trigger_mode_charging_hint)
         }
     }
 }

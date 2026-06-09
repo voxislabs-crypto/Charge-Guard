@@ -21,6 +21,8 @@
     <string name="mode_pending_auto_arm">Mode: Pending Auto-Arm (set-down delay)</string>
     <string name="mode_armed">Mode: Armed</string>
     <string name="mode_alarm">Mode: Alarm Active</string>
+    <string name="trigger_mode_charging_hint">Current trigger: movement while charging.</string>
+    <string name="trigger_mode_unplug_hint">Current trigger: unplug event.</string>
     <string name="premium_status_locked">Premium: Locked (ads enabled)</string>
     <string name="premium_status_unlocked">Premium: Unlocked (ads removed)</string>
     <string name="premium_not_ready">Premium product not ready yet. Try again shortly.</string>
