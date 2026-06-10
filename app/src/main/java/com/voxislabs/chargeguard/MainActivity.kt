@@ -25,6 +25,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var modeText: TextView
     private lateinit var armButton: Button
     private lateinit var disarmButton: Button
+    private lateinit var selfTestButton: Button
     private lateinit var armModeSwitch: Switch
     private lateinit var triggerModeSwitch: Switch
     private lateinit var triggerModeHintText: TextView
@@ -69,6 +70,7 @@ class MainActivity : AppCompatActivity() {
         modeText = findViewById(R.id.modeText)
         armButton = findViewById(R.id.armButton)
         disarmButton = findViewById(R.id.disarmButton)
+        selfTestButton = findViewById(R.id.selfTestButton)
         armModeSwitch = findViewById(R.id.armModeSwitch)
         triggerModeSwitch = findViewById(R.id.triggerModeSwitch)
         triggerModeHintText = findViewById(R.id.triggerModeHintText)
@@ -115,6 +117,14 @@ class MainActivity : AppCompatActivity() {
             } else {
                 disarmWithoutPin()
             }
+        }
+
+        selfTestButton.setOnClickListener {
+            val testIntent = Intent(this, GuardService::class.java).apply {
+                action = GuardService.ACTION_TEST_ALARM
+            }
+            ContextCompat.startForegroundService(this, testIntent)
+            Toast.makeText(this, getString(R.string.self_test_started), Toast.LENGTH_SHORT).show()
         }
 
         calibrateButton.setOnClickListener {

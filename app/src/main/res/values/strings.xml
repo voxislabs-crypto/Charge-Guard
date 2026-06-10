@@ -12,6 +12,7 @@
     <string name="enter_pin_title">Enter PIN to Disarm</string>
     <string name="pin_incorrect">Incorrect PIN.</string>
     <string name="disarm_label">Disarm</string>
+    <string name="self_test_started">Alarm self-test started. Unlock or disarm to stop.</string>
     <string name="desc_auto">While charging, the guard auto-arms whenever phone locks, 3s after movement stops.</string>
     <string name="desc_manual">Manual mode: tap Arm Guard to arm while charging.</string>
     <string name="disclaimer_charging_only">Disclaimer: Protection only works while the phone is plugged in and charging.</string>

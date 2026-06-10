@@ -135,6 +135,10 @@ class GuardService : Service(), SensorEventListener {
             }
             ACTION_ARM -> armGuard()
             ACTION_DISARM -> disarmGuard(stopService = false)
+            ACTION_TEST_ALARM -> {
+                stopCountdown()
+                triggerAlarm()
+            }
             ACTION_UPDATE_SETTINGS -> {
                 loadSettings()
                 if (armMode == ARM_MODE_AUTO_LOCK && isCharging && keyguardManager.isDeviceLocked && !isArmed) {
@@ -564,6 +568,7 @@ class GuardService : Service(), SensorEventListener {
         const val ACTION_START_MONITORING = "com.voxislabs.chargeguard.action.START_MONITORING"
         const val ACTION_ARM = "com.voxislabs.chargeguard.action.ARM"
         const val ACTION_DISARM = "com.voxislabs.chargeguard.action.DISARM"
+        const val ACTION_TEST_ALARM = "com.voxislabs.chargeguard.action.TEST_ALARM"
         const val ACTION_UPDATE_SETTINGS = "com.voxislabs.chargeguard.action.UPDATE_SETTINGS"
         const val ACTION_CALIBRATE = "com.voxislabs.chargeguard.action.CALIBRATE"
         const val ACTION_UI_STATE_CHANGED = "com.voxislabs.chargeguard.action.UI_STATE_CHANGED"
